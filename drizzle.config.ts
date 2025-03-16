@@ -5,7 +5,7 @@ dotenv.config();
 export default {
   schema: './db/schema.ts',
   out: './db',
-  driver: 'mysql2',
+  dialect: 'mysql',
   dbCredentials: {
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
