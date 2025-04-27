@@ -9,9 +9,19 @@ import { GoogleAuthController } from "./api/auth/google-auth.controller"
 import { GoogleAuthService } from "./api/auth/google-auth.service"
 import { UtilService } from "./util/util.service"
 import { UtilModule } from "./util/util.module"
+import { ConfigModule } from "@nestjs/config"
+import { LoggerModule } from "./log/logger.module"
 
 @Module({
-  imports: [CalendarModule, AuthModule, UtilModule],
+  imports: [
+    CalendarModule,
+    AuthModule,
+    UtilModule,
+    LoggerModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+  ],
   controllers: [AppController, CalendarController, GoogleAuthController],
   providers: [AppService, CalendarService, GoogleAuthService, UtilService],
 })
