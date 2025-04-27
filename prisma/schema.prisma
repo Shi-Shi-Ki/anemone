@@ -14,7 +14,7 @@ datasource db {
 }
 
 model users {
-  id            Int      @id @default(autoincrement())
+  id            BigInt   @id @default(autoincrement())
   name          String   @db.VarChar(1024)
   last_login_at DateTime
   updated_at    DateTime @updatedAt
@@ -23,7 +23,7 @@ model users {
 }
 
 model todos {
-  id           Int            @id @default(autoincrement())
+  id           BigInt         @id @default(autoincrement())
   users        users          @relation(fields: [user_id], references: [id])
   user_id      Int
   updated_at   DateTime       @updatedAt
@@ -32,12 +32,59 @@ model todos {
 }
 
 model todo_details {
-  id           Int      @id @default(autoincrement())
+  id           BigInt   @id @default(autoincrement())
   todos        todos    @relation(fields: [todo_id], references: [id])
   todo_id      Int
+  project_affiliations project_affiliations[]
+}
+
+model todos {
+  id           BigInt         @id @default(autoincrement())
+  users        users          @relation(fields: [user_id], references: [id])
+  user_id      BigInt
+  updated_at   DateTime       @updatedAt
+  created_at   DateTime       @default(now())
+  todo_details todo_details[]
+  project_belong_todos project_belong_todos[]
+}
+
+model todo_details {
+  id           BigInt   @id @default(autoincrement())
+  todos        todos    @relation(fields: [todo_id], references: [id])
+  todo_id      BigInt
   title        String   @db.VarChar(1024)
   content      String   @db.Text
   completed_at DateTime
   updated_at   DateTime @updatedAt
   created_at   DateTime @default(now())
+}
+
+model projects {
+  id                   BigInt   @id @default(autoincrement())
+  name                 String   @db.VarChar(1024)
+  description          String   @db.VarChar(1024)
+  updated_at           DateTime @updatedAt
+  created_at           DateTime @default(now())
+  project_affiliations project_affiliations[]
+  project_belong_todos project_belong_todos[]
+}
+
+model project_affiliations {
+  id         BigInt   @id @default(autoincrement())
+  users      users    @relation(fields: [user_id], references: [id])
+  user_id    BigInt
+  projects   projects @relation(fields: [project_id], references: [id])
+  project_id BigInt
+  updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
+}
+
+model project_belong_todos {
+  id         BigInt   @id @default(autoincrement())
+  projects   projects @relation(fields: [project_id], references: [id])
+  project_id BigInt
+  todos      todos    @relation(fields: [todo_id], references: [id])
+  todo_id    BigInt
+  updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
 }
