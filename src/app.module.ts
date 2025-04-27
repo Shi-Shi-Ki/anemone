@@ -8,7 +8,7 @@ import { AuthModule } from "./auth/auth.module"
 import { GoogleAuthController } from "./api/auth/google-auth.controller"
 import { GoogleAuthService } from "./api/auth/google-auth.service"
 import { UtilService } from "./util/util.service"
-import { UtilModule } from './util/util.module';
+import { UtilModule } from "./util/util.module"
 
 @Module({
   imports: [CalendarModule, AuthModule, UtilModule],
