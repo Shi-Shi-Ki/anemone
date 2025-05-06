@@ -1,27 +1,46 @@
 import { Injectable, LoggerService, Scope } from "@nestjs/common"
-import { createLogger, format, transports, Logger } from "winston"
+import { createLogger, format, transports, Logger, Logform } from "winston"
 import "winston-daily-rotate-file"
 import * as path from "path"
 import * as fs from "fs"
 import * as util from "util"
 
+// this.logger.xxxから自動で呼び出される
 const nestLikeConsoleFormat = (appName: string = "NestWinston", isColor: boolean = true) => {
   const formats = [
-    format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+    format.timestamp({ format: "YYYY-MM-DD HH:mm:ss.SSS" }),
     format.splat(),
-    format.printf((info) => {
-      const { level, message, context, timestamp, ...rest } = info
-      //   const args = (rest[Symbol.for("splat") as any] as []) || []
-      //   let logOutput = `${timestamp} [${context || appName}] ${level}: ${message}`
-      //   args.forEach((arg, index) => {
-      //     const inspectedArg = util.inspect(arg, { depth: null, colors: false })
-      //     if (index > 0) {
-      //       logOutput += "\n"
-      //     }
-      //     logOutput += inspectedArg
-      //   })
-      //   return logOutput
-      return `${timestamp} [${context || appName}] ${level}: ${message}`
+    format.printf((values: Logform.TransformableInfo) => {
+      const level = values.level as string
+      const message = values.message as string
+      const timestamp = values.timestamp as string
+      const params = values.params as any[] | undefined // %oなどのフォーマット文字列の判断用
+      if (params) {
+        // ("hoge: ", hoge) or ([1, 2, 3], "hoge")
+        const formattingMessage =
+          typeof message === "string"
+            ? message
+            : util.inspect(message, {
+                depth: null,
+                colors: false,
+                compact: false,
+              })
+        const args = (values[Symbol.for("splat")] as any[] | undefined) || []
+        const extractionParams = (args.length > 0 && args[0].params ? args[0].params : []) as any[]
+        const formattingParams = extractionParams.map((value) => {
+          return typeof value === "string"
+            ? value
+            : util.inspect(value, {
+                depth: null,
+                colors: false,
+                compact: false,
+              })
+        })
+        return `${timestamp} [${appName}] ${level}: ${formattingMessage} ${formattingParams}`
+      }
+      // ("hoge") or ("hoge: %o", hoge)
+      // messageをそのまま出力
+      return `${timestamp} [${appName}] ${level}: ${message}`
     }),
   ]
   if (isColor) {
@@ -92,57 +111,22 @@ export class AppLoggerService implements LoggerService {
   }
 
   log(message: any, ...optionalParams: any[]) {
-    const formatting = this.formattingMessage(message, optionalParams)
-    this.logger.info(formatting.message, null, {
-      context: formatting.context,
-    })
+    this.logger.info(message, { params: optionalParams, context: this.context })
   }
 
   error(message: any, ...optionalParams: any[]) {
-    const formatting = this.formattingMessage(message, optionalParams)
-    this.logger.error(formatting.message, [], {
-      context: formatting.context || this.context,
-    })
+    this.logger.error(message, { params: optionalParams, context: this.context })
   }
 
   warn(message: any, ...optionalParams: any[]): any {
-    const formatting = this.formattingMessage(message, optionalParams)
-    this.logger.warn(formatting.message, [], {
-      context: formatting.context || this.context,
-    })
+    this.logger.warn(message, { params: optionalParams, context: this.context })
   }
 
   debug(message: any, ...optionalParams: any[]): any {
-    const formatting = this.formattingMessage(message, optionalParams)
-    this.logger.debug(formatting.message, [], {
-      context: formatting.context || this.context,
-    })
+    this.logger.debug(message, { params: optionalParams, context: this.context })
   }
 
   verbose(message: any, ...optionalParams: any[]): any {
-    const formatting = this.formattingMessage(message, optionalParams)
-    this.logger.verbose(formatting.message, [], {
-      context: formatting.context || this.context,
-    })
-  }
-
-  private formattingMessage(message: any, optionalParams: any[]) {
-    let context: string | undefined = this.context
-    let logArgs: any[] = [] // util.format に渡す引数 + splat に収集させたい引数
-    // optionalParams の最後の要素が文字列であれば、それをコンテキストとして扱う
-    if (
-      optionalParams.length > 0 &&
-      typeof optionalParams[optionalParams.length - 1] === "string"
-    ) {
-      context = optionalParams[optionalParams.length - 1] as string
-      logArgs = optionalParams.slice(0, -1) // 最後の要素以外を変数展開用引数とする
-    } else {
-      logArgs = optionalParams // 最後の要素が文字列でない場合、optionalParams 全体を変数展開用引数とする
-    }
-
-    return {
-      context: context || this.context,
-      message: util.format(message, ...logArgs),
-    }
+    this.logger.verbose(message, { params: optionalParams, context: this.context })
   }
 }
