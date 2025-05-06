@@ -12,6 +12,7 @@ async function bootstrap() {
       credentials: true, // Cookie などの認証情報を許可する場合
     },
   })
+
   await app.listen(process.env.APP_PORT ?? 3000)
 }
 bootstrap()

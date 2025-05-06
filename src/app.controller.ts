@@ -1,14 +1,28 @@
-import { Body, Controller, Get, Post } from "@nestjs/common"
+import { Body, Controller, Get, Post, Logger } from "@nestjs/common"
 import { AppService } from "./app.service"
 import { google } from "googleapis"
 import { OAuth2Client } from "google-auth-library"
+import { AppLoggerService } from "./log/app-logger.service"
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+    private readonly logger: AppLoggerService
+  ) {}
 
   @Get()
   getHello(): string {
+    const value = { code: 123, value: "ABC" }
+    this.logger.error("%% error log test! %%")
+    console.log("\n---\n")
+    this.logger.warn(value, "call AppController getHello")
+    console.log("\n---\n")
+    this.logger.error([1, 2, 3], "%% first array param test. %%")
+    console.log("\n---\n")
+    this.logger.log("splat log test_1 (%o)", value)
+    console.log("\n---\n")
+    this.logger.log("splat log test_2", value)
     return this.appService.getHello()
   }
 
